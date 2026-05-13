@@ -44,6 +44,7 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     this.baseColor = baseColor;
     this.grownColor = grownColor;
     this.message = message;
+    //TODO: rename whyDoIDoThis and hmm to desc
     this.whyDoIDoThis = hmm;
     this.upgrades = [
         new Upgrade("machineSpeed", speedBasePrice*initialBuff, mowerRateMultiplier+multiplierBuff, function(){activeField.machineSpeed++}, "%tpt% tiles/tick", "%name% Speed", function(){return activeField.machineSpeed<20;}),
@@ -73,6 +74,7 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     this.tickRate = 1000;
     this.unlockPrice=unlockPrice;
     this.generateField = function(){
+        debugger;
         for(var i = 0; i < width/tileSizes[this.tileSize]; i++){
             this.field.push(new Array());
             for(var j = 0; j < height/tileSizes[this.tileSize]; j++){
