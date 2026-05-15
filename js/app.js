@@ -1,42 +1,17 @@
+import { WIDTH, HEIGHT, TILE_SIZES, MAX_GROWTH, GROWTH_BASE_PRICE, SPEED_BASE_PRICE, SIZE_BASE_PRICE, TILE_BASE_PRICE, TICK_BASE_PRICE, GROWTH_RATE_MULTIPLIER, TICK_BASE_MULTIPLIER, MOWER_RATE_MULTIPLIER, MOWER_SIZE_MULTIPLIER, TILE_SIZE_MULTIPLIER } from "./consts.js"
 window.onload = setup;
-
-var width = 500;
-var height = 500;
 
 var money = 0;
 var totalMoney = 0;
-
 var canvas;
 var ctx;
-
 var fields = [];
-
 var nextMulch = 0;
-var tileSizes = [50,25,20,10,5,4,2,1];
-
-var maxGrowth = 15;
-
 var mulch = 0;
-
 var activeField;
 var growthBonus = 0;
-
 var currentPosition = 0;
 var unlockedFields = 1;
-
-var growthBasePrice = 10;
-
-var speedBasePrice = 50;
-var sizeBasePrice = 75;
-var tileBasePrice = 150;
-
-var tickBasePrice = 5;
-
-var growthRateMultiplier = 1.2;
-var tickBaseMultiplier = 1.2;
-var mowerRateMultiplier = 2.5;
-var mowerSizeMultiplier = 1.5;
-var tileSizeMultiplier = 3.5;
 var currentlyPrestiging = false;
 
 function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineColor, unlockPrice, message, value, machineName, hmm){
@@ -47,11 +22,11 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     //TODO: rename whyDoIDoThis and hmm to desc
     this.whyDoIDoThis = hmm;
     this.upgrades = [
-        new Upgrade("machineSpeed", speedBasePrice*initialBuff, mowerRateMultiplier+multiplierBuff, function(){activeField.machineSpeed++}, "%tpt% tiles/tick", "%name% Speed", function(){return activeField.machineSpeed<20;}),
-        new Upgrade("machineSize", sizeBasePrice*initialBuff, mowerSizeMultiplier+multiplierBuff, function(){if(activeField.machineWidth==activeField.machineHeight){activeField.machineWidth++}else{activeField.machineHeight++}activeField.machineX=0;activeField.machineY=0;}, "%w%x%h%", "%name% Size", function(){console.log(activeField.machineHeight + " " + tileSizes[activeField.tileSize]); return activeField.machineHeight < height/tileSizes[activeField.tileSize];}),
-        new Upgrade("tileSize", tileBasePrice*initialBuff, tileSizeMultiplier+multiplierBuff, function(){activeField.tileSize=Math.min(activeField.tileSize+1,tileSizes.length-1);activeField.regenerate();}, "%sz%x%sz%", "Tile Size", function(){return activeField.tileSize < tileSizes.length - 1;}),
-        new Upgrade("growthRate", growthBasePrice*initialBuff, growthRateMultiplier+multiplierBuff, function(){activeField.growthAmount+=2;}, "%gr% growth/tick", "Growth Rate", function(){return activeField.growthAmount<60;}),
-        new Upgrade("tickRate", tickBasePrice*initialBuff, tickBaseMultiplier+multiplierBuff, function(){activeField.tickRate=Math.max(1,Math.floor(activeField.tickRate*0.9));}, "%ms% ms", "Tick Rate", function(){return activeField.tickRate > 4;})
+        new Upgrade("machineSpeed", SPEED_BASE_PRICE*initialBuff, MOWER_RATE_MULTIPLIER+multiplierBuff, function(){activeField.machineSpeed++}, "%tpt% tiles/tick", "%name% Speed", function(){return activeField.machineSpeed<20;}),
+        new Upgrade("machineSize", SIZE_BASE_PRICE*initialBuff, MOWER_SIZE_MULTIPLIER+multiplierBuff, function(){if(activeField.machineWidth==activeField.machineHeight){activeField.machineWidth++}else{activeField.machineHeight++}activeField.machineX=0;activeField.machineY=0;}, "%w%x%h%", "%name% Size", function(){console.log(activeField.machineHeight + " " + TILE_SIZES[activeField.tileSize]); return activeField.machineHeight < HEIGHT/TILE_SIZES[activeField.tileSize];}),
+        new Upgrade("tileSize", TILE_BASE_PRICE*initialBuff, TILE_SIZE_MULTIPLIER+multiplierBuff, function(){activeField.tileSize=Math.min(activeField.tileSize+1,TILE_SIZES.length-1);activeField.regenerate();}, "%sz%x%sz%", "Tile Size", function(){return activeField.tileSize < TILE_SIZES.length - 1;}),
+        new Upgrade("growthRate", GROWTH_BASE_PRICE*initialBuff, GROWTH_RATE_MULTIPLIER+multiplierBuff, function(){activeField.growthAmount+=2;}, "%gr% growth/tick", "Growth Rate", function(){return activeField.growthAmount<60;}),
+        new Upgrade("tickRate", TICK_BASE_PRICE*initialBuff, TICK_BASE_MULTIPLIER+multiplierBuff, function(){activeField.tickRate=Math.max(1,Math.floor(activeField.tickRate*0.9));}, "%ms% ms", "Tick Rate", function(){return activeField.tickRate > 4;})
     ];
     
     this.machineName = machineName;
@@ -74,11 +49,10 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     this.tickRate = 1000;
     this.unlockPrice=unlockPrice;
     this.generateField = function(){
-        debugger;
-        for(var i = 0; i < width/tileSizes[this.tileSize]; i++){
+        for(var i = 0; i < WIDTH/TILE_SIZES[this.tileSize]; i++){
             this.field.push(new Array());
-            for(var j = 0; j < height/tileSizes[this.tileSize]; j++){
-                this.field[i].push(Math.floor(Math.random()*maxGrowth));
+            for(var j = 0; j < HEIGHT/TILE_SIZES[this.tileSize]; j++){
+                this.field[i].push(Math.floor(Math.random()*MAX_GROWTH));
                 updateTile(this, i, j);
             }
         }
@@ -96,7 +70,7 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     }
     
     this.getUpgradeText = function(upgrade){
-        return upgrade.displayText.replace("%tpt%", this.machineSpeed).replace("%w%", this.machineWidth).replace("%h%", this.machineHeight).replace(/%sz%/g, width/tileSizes[this.tileSize]).replace("%ms%", this.tickRate).replace("%gr%", this.growthAmount);
+        return upgrade.displayText.replace("%tpt%", this.machineSpeed).replace("%w%", this.machineWidth).replace("%h%", this.machineHeight).replace(/%sz%/g, WIDTH/TILE_SIZES[this.tileSize]).replace("%ms%", this.tickRate).replace("%gr%", this.growthAmount);
     }
     
     this.regenerate = function(){
@@ -140,32 +114,32 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
                 if(this.machineY > 0){
                     this.machineY--;
                 }else{
-                    if(this.machineX >= width / tileSizes[this.tileSize]-this.machineWidth){
+                    if(this.machineX >= WIDTH / TILE_SIZES[this.tileSize]-this.machineWidth){
                         this.goingUp=false;
                         this.machineX = 0;
                         this.machineY = 0;
                     }else{
-                        this.machineX=Math.min(this.machineX + this.machineWidth, width / tileSizes[this.tileSize]-this.machineWidth);
+                        this.machineX=Math.min(this.machineX + this.machineWidth, WIDTH / TILE_SIZES[this.tileSize]-this.machineWidth);
                         this.goingUp = false;
                     }
                 }
             }else{
-                if(this.machineY < height / tileSizes[this.tileSize]-this.machineHeight){
+                if(this.machineY < HEIGHT / TILE_SIZES[this.tileSize]-this.machineHeight){
                     this.machineY++;
                 }else{
-                    if(this.machineX >= width / tileSizes[this.tileSize]-this.machineWidth){
+                    if(this.machineX >= WIDTH / TILE_SIZES[this.tileSize]-this.machineWidth){
                         this.goingUp=false;
                         this.machineX = 0;
                         this.machineY = 0;
                     }else{
-                        this.machineX=Math.min(this.machineX + this.machineWidth, width / tileSizes[this.tileSize]-this.machineWidth);
+                        this.machineX=Math.min(this.machineX + this.machineWidth, WIDTH / TILE_SIZES[this.tileSize]-this.machineWidth);
                         this.goingUp = true;
                     }
                 }
             }
             if(activeField==this){
                 ctx.fillStyle = this.machineColor;
-                ctx.fillRect(this.machineX *tileSizes[this.tileSize],this.machineY*tileSizes[this.tileSize],tileSizes[this.tileSize]*this.machineWidth,tileSizes[this.tileSize]*this.machineHeight);
+                ctx.fillRect(this.machineX *TILE_SIZES[this.tileSize],this.machineY*TILE_SIZES[this.tileSize],TILE_SIZES[this.tileSize]*this.machineWidth,TILE_SIZES[this.tileSize]*this.machineHeight);
             }
             
         }
@@ -173,11 +147,11 @@ function Area(name, multiplierBuff, initialBuff, baseColor, grownColor, machineC
     
     this.growthTick = function(){
 
-        var x = Math.floor(Math.random()*width/tileSizes[this.tileSize]);
-        var y = Math.floor(Math.random()*height/tileSizes[this.tileSize]);
-        if(this.field[x][y]<maxGrowth){
+        var x = Math.floor(Math.random()*WIDTH/TILE_SIZES[this.tileSize]);
+        var y = Math.floor(Math.random()*HEIGHT/TILE_SIZES[this.tileSize]);
+        if(this.field[x][y]<MAX_GROWTH){
             
-            this.field[x][y]=Math.min(maxGrowth, this.field[x][y]+1+growthBonus);
+            this.field[x][y]=Math.min(MAX_GROWTH, this.field[x][y]+1+growthBonus);
         }
         if(activeField == this)
             updateTile(this, x, y);
@@ -382,13 +356,13 @@ function reset(){
 
 function updateTile(field, x, y){
     
-    var ratio = field.field[x][y]/maxGrowth;
+    var ratio = field.field[x][y]/MAX_GROWTH;
     
     var r = field.baseColor[0]+Math.round(ratio*(field.grownColor[0]-field.baseColor[0]));
     var g = field.baseColor[1]+Math.round(ratio*(field.grownColor[1]-field.baseColor[1]));
     var b = field.baseColor[2]+Math.round(ratio*(field.grownColor[2]-field.baseColor[2]));
     
     ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-    ctx.fillRect(x*tileSizes[field.tileSize], y*tileSizes[field.tileSize], tileSizes[field.tileSize], tileSizes[field.tileSize]);
+    ctx.fillRect(x*TILE_SIZES[field.tileSize], y*TILE_SIZES[field.tileSize], TILE_SIZES[field.tileSize], TILE_SIZES[field.tileSize]);
     
 }
